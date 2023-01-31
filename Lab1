@@ -1,0 +1,322 @@
+
+#include<iostream>
+#include<fstream>
+#include<math.h>
+using namespace std;
+struct List_element {
+	int info;
+	List_element* next;
+	List_element* prev;
+	List_element() {
+		this->info = 0;
+		this->next = NULL;
+		this->prev = NULL;
+	}
+	List_element(int info, List_element* next, List_element* prev) {
+		this->info = info;
+		this->next = next;
+		this->prev = prev;
+	}
+};
+class List {
+private:
+	List_element* head;
+	List_element* last;
+public:
+	List() {
+		this->head = NULL;
+		this->last = NULL;
+	}
+	List(List_element* head, List_element* last) {
+		this->head = head;
+		this->last = last;
+	}
+	bool Is_empty();
+	int List_Length();
+	void add_head(List_element* add_element);
+	void add_last(List_element* add_element);
+	void add_index(List_element* add_element, int index);
+	void input(fstream& f);
+	void delete_head();
+	void delete_last();
+	void delete_index(int index);
+	void delete_list();
+	List_element* GetElem(int index);
+	void change_index(int index, List_element* change_element);
+	void swap(int index1, int index2);
+	void Output();
+};
+void List::swap(int index1, int index2) {
+	int index = max(index1, index2);
+	index1 = min(index1, index2);
+	index2 = index;
+	if (!this->Is_empty()) {
+		if (index1 >= this->List_Length() || index2 >= this->List_Length()) {
+			cout << "items with such indexes do not exist in the list" << '\n';
+		}
+		else {
+			List_element* cur1 = this->head;
+			int i = 0;
+			while (i != index1) {
+				cur1 = cur1->next;
+				i++;
+			}
+			List_element* cur2 = this->head;
+			i = 0;
+			while (i != index2) {
+				cur2 = cur2->next;
+				i++;
+			}
+			if (cur1->next == cur2) {
+				if (cur1->prev != NULL)
+					cur1->prev->next = cur2;
+				if (cur2->next != NULL)
+					cur1->next->prev = cur1;
+				cur1->next = cur2->next;
+				cur2->prev = cur1->prev;
+				cur2->next = cur1;
+				cur1->prev = cur2;
+			}
+			else {
+				if (cur1->prev != NULL)
+					cur1->prev->next = cur2;
+				cur1->next->prev = cur2;
+				cur1->next->next = cur1;
+				if (cur2->next != NULL)
+					cur2->next->prev = cur1;
+				List_element* tmp = cur1->next;
+				cur1->next = cur2->next;
+				cur2->next = tmp;
+				tmp = cur1->prev;
+				cur1->prev = cur2->prev;
+				cur2->prev = tmp;
+			}
+			if (cur2->prev == NULL)
+				this->head = cur2;
+			if (cur1->next == NULL) {
+				this->last = cur1;
+			}
+		}
+	}
+}
+void List::Output() {
+	if (Is_empty())
+		cout << "  list is empty" << '\n';
+	else {
+		List_element* cur = this->head;
+		while (cur != this->last) {
+			cout << "  " << cur->info << '\n';
+			cur = cur->next;
+		}
+		cout << "  " << cur->info << '\n';
+	}
+}
+int List::List_Length() {
+	List_element* cur = this->head;
+	int i = 1;
+	while (cur != this->last) {
+		cur = cur->next;
+		i++;
+	}
+	return i;
+}
+bool List::Is_empty() {
+	return this->head == NULL;
+}
+void List::input(fstream& f) {
+	int info;
+	f >> info;
+	List_element* input = new List_element(info, NULL, NULL);
+	this->add_head(input);
+	if (!f.eof()) {
+		while (!f.eof()) {
+			f >> info;
+			input = new List_element(info, NULL, NULL);
+			this->add_last(input);
+		}
+	}
+}
+List_element* List::GetElem(int index) {
+	if (index >= this->List_Length()) {
+		cout << "there is no element for such an index" << '\n';
+		return NULL;
+	}
+	else {
+		List_element* cur = this->head;
+		int i = 0;
+		while (i != index) {
+			cur = cur->next;
+			i++;
+		}
+		return cur;
+	}
+}
+void List::delete_head() {
+	if (!this->Is_empty()) {
+		List_element* cur = this->head->next;
+		delete this->head;
+		head = cur;
+		if (head != NULL)
+			head->prev = NULL;
+	}
+}
+void List::delete_last() {
+	if (!this->Is_empty()) {
+		List_element* cur = this->last->prev;
+		delete this->last;
+		last = cur;
+		last->next = NULL;
+		if (last != NULL)
+			last->prev = NULL;
+	}
+}
+void List::delete_index(int index) {
+	if (!Is_empty()) {
+		if (index >= this->List_Length()) {
+			cout << "there is no element for such an index" << '\n';
+		}
+		else {
+			if (index == this->List_Length() - 1) {
+				this->delete_last();
+			}
+			else {
+				List_element* cur = this->head;
+				int i = 0;
+				while (i != index) {
+					cur = cur->next;
+					i++;
+				}
+				cur->prev->next = cur->next;
+				cur->next->prev = cur->prev;
+				delete cur;
+			}
+		}
+	}
+}
+void List::delete_list() {
+	if (!Is_empty()) {
+		while (head != last) {
+			this->delete_head();
+		}
+		this->delete_head();
+		this->last = NULL;
+	}
+}
+void List::change_index(int index, List_element* change_element) {
+	List_element* cur = this->head;
+	int i = 0;
+	while (i != index) {
+		cur = cur->next;
+		i++;
+	}
+	cur->prev->next = change_element;
+	change_element->prev = cur->prev;
+	cur->next->prev = change_element;
+	change_element->next = cur->next;
+}
+void List::add_head(List_element* add_element) {
+	if (this->Is_empty()) {
+		this->head = add_element;
+		this->last = this->head;
+	}
+	else {
+		this->head->prev = add_element;
+		this->head->prev->next = this->head;
+		this->head = this->head->prev;
+		this->head->prev = NULL;
+	}
+}
+void List::add_last(List_element* add_element) {
+	if (this->Is_empty()) {
+		this->head = add_element;
+		this->last = this->head;
+	}
+	else {
+		this->last->next = add_element;
+		this->last->next->prev = this->last;
+		this->last = this->last->next;
+		this->last->next = NULL;
+	}
+}
+void List::add_index(List_element* add_element, int index) {
+	if (index > this->List_Length()) {
+		cout << "there is no element for such an index" << '\n';
+	}
+	else {
+		if (index == this->List_Length()) {
+			this->add_last(add_element);
+		}
+		else {
+			List_element* cur = this->head;
+			int i = 0;
+			while (i != index) {
+				cur = cur->next;
+				i++;
+			}
+			cur->prev->next = add_element;
+			add_element->prev = cur->prev;
+			cur->prev = add_element;
+			add_element->next = cur;
+		}
+	}
+}
+int main() {
+	fstream f;
+	f.open("input.txt", ios::in);
+	List List_int;
+	List_element* tmp = new List_element(-10, NULL, NULL);
+	List_int.input(f);
+	cout << "  List of int:" << '\n';
+	List_int.Output();
+	cout << '\n';
+	cout << "  add_head: " << '\n' << "  element: " << tmp->info << '\n';
+	List_int.add_head(tmp);
+	List_int.Output();
+	tmp = new List_element(10, NULL, NULL);
+	cout << '\n';
+	cout << "  add_last: " << '\n' << "  element: " << tmp->info << '\n';
+	List_int.add_last(tmp);
+	List_int.Output();
+	cout << '\n';
+	cout << "  delete_head: " << '\n';
+	List_int.delete_head();
+	List_int.Output();
+	cout << '\n';
+	cout << "  delete_last: "<< '\n';
+	List_int.delete_last();
+	List_int.Output();
+	tmp = new List_element(18, NULL, NULL);
+	cout << "  add_index: " << '\n' << "  element: " << tmp->info << '\n' << "  index: 3" << '\n';
+	List_int.add_index(tmp, 3);
+	List_int.Output();
+	cout << '\n';
+	cout << "  delete_index: " << '\n' << "  index: 3" << '\n';
+	List_int.delete_index(3);
+	List_int.Output();
+	cout << '\n';
+	cout << "  List_length: " << '\n' << "  length of list: " << List_int.List_Length() << '\n';
+	cout << '\n';
+	cout << "  Is_empty: " << '\n';
+	if (List_int.Is_empty())
+		cout << "  list is empty" << '\n';
+	else
+		cout << "  list is  not empty" << '\n';
+	cout << '\n';
+	cout << "  GetElement: " << '\n' << "  index: 4" << '\n';
+	List_int.GetElem(4);
+	List_int.Output();
+	tmp = new List_element(153, NULL, NULL);
+	cout << '\n';
+	cout << "  change_index: " << '\n' << "  element: " << tmp->info << '\n' << "  index: 5" << '\n';
+	List_int.change_index(5, tmp);
+	List_int.Output();
+	cout << '\n';
+	cout << "  swap: " << '\n' << "  index1: 2 " << "index2: 6" <<  '\n';
+	List_int.swap(2, 6);
+	List_int.Output();
+	cout << '\n';
+	cout << "  delete_List: " << '\n';
+	List_int.delete_list();
+	List_int.Output();
+	return 0;
+}
